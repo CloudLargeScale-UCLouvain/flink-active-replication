@@ -1,0 +1,11 @@
+dependencies:
+  # - name: zookeeper
+  #   version: 5.13.2
+  #   repository: https://charts.bitnami.com/bitnami
+  #   alias: zookeeper
+  #   condition: zookeeper.enabled
+  #- name: kafka
+  #  version: 11.7.2
+  #  repository: https://charts.bitnami.com/bitnami
+  #  condition: kafka.enabled
+  #  alias: kafka

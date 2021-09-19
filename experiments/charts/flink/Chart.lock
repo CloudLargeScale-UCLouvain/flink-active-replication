@@ -1,0 +1,15 @@
+dependencies:
+- name: minio
+  repository: https://charts.bitnami.com/bitnami
+  version: 4.1.0
+- name: hdfs
+  repository: https://gradiant.github.io/charts
+  version: 0.1.9
+- name: zookeeper
+  repository: https://charts.bitnami.com/bitnami
+  version: 5.13.2
+- name: kafka
+  repository: https://charts.bitnami.com/bitnami
+  version: 11.7.2
+digest: sha256:852cef3029b08c475205ae4d9645d37dd5fdcfeca63541f240ff5cef7f89d0bc
+generated: "2021-08-09T18:33:35.260389426+02:00"

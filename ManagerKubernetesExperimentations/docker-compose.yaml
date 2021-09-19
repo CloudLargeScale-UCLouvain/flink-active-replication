@@ -1,0 +1,21 @@
+# build
+version: "3.7"
+services:
+  fluentd:
+    build: 
+      context: ./docker/fluentd-locust
+      dockerfile: Dockerfile
+      network: host
+    image: grosinosky/fluentd:0.0.1
+  jupyter:
+    build: 
+      context: ./docker/jupyter
+      dockerfile: Dockerfile
+      network: host
+    image: grosinosky/manager-jupyter:0.0.2
+  python-mc:
+    build:
+      context: ./docker/python-mc
+      dockerfile: Dockerfile
+      network: host
+    image: grosinosky/python-mc:0.0.3

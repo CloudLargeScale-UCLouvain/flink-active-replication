@@ -1,0 +1,18 @@
+
+# Just one more PV
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: prom-alertmanager-pv
+  labels:
+    app: prometheus
+    component: alertmanager
+    release: my-prometheus
+#    chart: prometheus-11.1.2
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/home/ubuntu/volume/data/prometheus-alerts"

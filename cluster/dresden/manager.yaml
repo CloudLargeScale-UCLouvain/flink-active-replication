@@ -1,0 +1,106 @@
+mongo: 
+  install: false
+argo:
+  install: false
+loki:
+  install: false
+  loki:
+    nodeSelector: 
+      tier: prometheus
+    config:
+      limits_config:
+        ingestion_rate_mb: 16
+        ingestion_burst_size_mb: 32
+prometheus:
+  install: false
+  grafana:
+    nodeSelector:
+      tier: manager
+    additionalDataSources:
+    - name: Loki
+      type: loki
+      orgId: 1
+      url: http://manager-loki.manager:3100/
+      access: proxy
+      isDefault: false    
+      editable: false    
+      version: 1    
+    dashboardProviders:
+      dashboardproviders.yaml:
+        apiVersion: 1
+        providers:
+        - name: 'myprovider'
+          orgId: 1
+          folder: ''
+          type: file
+          disableDeletion: true
+          editable: false
+          options:
+            path: /var/lib/grafana/dashboards/myprovider      
+    dashboards:
+      myprovider:
+        flink-dashboard:
+          json: |
+            {"__inputs":[{"name":"DS_PROMETHEUS","label":"Prometheus","description":"","type":"datasource","pluginId":"prometheus","pluginName":"Prometheus"}],"__requires":[{"type":"grafana","id":"grafana","name":"Grafana","version":"5.3.2"},{"type":"panel","id":"graph","name":"Graph","version":"5.0.0"},{"type":"datasource","id":"prometheus","name":"Prometheus","version":"5.0.0"},{"type":"panel","id":"singlestat","name":"Singlestat","version":"5.0.0"}],"annotations":{"list":[{"builtIn":1,"datasource":"-- Grafana --","enable":true,"hide":true,"iconColor":"rgba(0, 211, 255, 1)","name":"Annotations & Alerts","type":"dashboard"}]},"editable":true,"gnetId":null,"graphTooltip":0,"id":null,"iteration":1541689798391,"links":[],"panels":[{"aliasColors":{},"bars":false,"dashLength":10,"dashes":false,"datasource":"Prometheus","fill":1,"gridPos":{"h":9,"w":16,"x":0,"y":0},"id":21,"legend":{"avg":false,"current":false,"max":false,"min":false,"show":true,"total":false,"values":false},"lines":true,"linewidth":1,"links":[],"nullPointMode":"null","percentage":false,"pointradius":5,"points":false,"renderer":"flot","seriesOverrides":[],"spaceLength":10,"stack":false,"steppedLine":false,"targets":[{"expr":"generator_generated_per_second","format":"time_series","intervalFactor":1,"legendFormat":"Created transactions per second","refId":"A"},{"expr":"","format":"time_series","intervalFactor":1,"legendFormat":"Sent transactions per second","refId":"B"}],"thresholds":[],"timeFrom":null,"timeShift":null,"title":"Generated and sent transactions per second","tooltip":{"shared":true,"sort":0,"value_type":"individual"},"type":"graph","xaxis":{"buckets":null,"mode":"time","name":null,"show":true,"values":[]},"yaxes":[{"format":"short","label":null,"logBase":1,"max":null,"min":"0","show":true},{"format":"short","label":null,"logBase":1,"max":null,"min":null,"show":false}],"yaxis":{"align":false,"alignLevel":null}},{"aliasColors":{},"bars":false,"dashLength":10,"dashes":false,"datasource":"Prometheus","fill":1,"gridPos":{"h":9,"w":8,"x":16,"y":0},"id":13,"legend":{"avg":false,"current":false,"max":false,"min":false,"show":true,"total":false,"values":false},"lines":true,"linewidth":1,"links":[],"nullPointMode":"null","percentage":false,"pointradius":1,"points":true,"renderer":"flot","seriesOverrides":[],"spaceLength":10,"stack":false,"steppedLine":false,"targets":[{"expr":"flink_taskmanager_job_task_operator_numRecordsOutPerSecond{job_id=\"$JOB_ID\"}","format":"time_series","instant":false,"interval":"","intervalFactor":1,"legendFormat":"{{operator_name}}","refId":"A"},{"expr":"","format":"time_series","intervalFactor":1,"refId":"B"}],"thresholds":[],"timeFrom":null,"timeShift":null,"title":"Records Out per Second","tooltip":{"shared":true,"sort":0,"value_type":"individual"},"type":"graph","xaxis":{"buckets":null,"mode":"time","name":null,"show":true,"values":[]},"yaxes":[{"format":"short","label":null,"logBase":1,"max":null,"min":null,"show":true},{"format":"short","label":null,"logBase":1,"max":null,"min":null,"show":true}],"yaxis":{"align":false,"alignLevel":null}},{"aliasColors":{},"bars":false,"dashLength":10,"dashes":false,"datasource":"Prometheus","fill":1,"gridPos":{"h":9,"w":16,"x":0,"y":9},"id":12,"legend":{"alignAsTable":true,"avg":false,"current":false,"max":false,"min":false,"show":true,"total":false,"values":false},"lines":true,"linewidth":1,"links":[],"nullPointMode":"null","percentage":false,"pointradius":5,"points":false,"renderer":"flot","seriesOverrides":[],"spaceLength":10,"stack":false,"steppedLine":false,"targets":[{"expr":"flink_taskmanager_job_task_operator_event_time_latency{quantile=\"0.999\"}","format":"time_series","intervalFactor":1,"legendFormat":"Event time latency","refId":"A"},{"expr":"flink_taskmanager_job_task_operator_event_time_duplicate_latency{quantile=\"0.999\"}","format":"time_series","intervalFactor":1,"legendFormat":"Event time duplicate latency","refId":"B"},{"expr":"flink_taskmanager_job_task_operator_processing_time_latency{quantile=\"0.999\"}","format":"time_series","intervalFactor":1,"legendFormat":"Processing time latency","refId":"C"}],"thresholds":[],"timeFrom":null,"timeShift":null,"title":"Latency","tooltip":{"shared":true,"sort":0,"value_type":"individual"},"type":"graph","xaxis":{"buckets":null,"mode":"time","name":null,"show":true,"values":[]},"yaxes":[{"format":"ns","label":null,"logBase":1,"max":null,"min":null,"show":true},{"format":"short","label":null,"logBase":1,"max":null,"min":null,"show":true}],"yaxis":{"align":false,"alignLevel":null}},{"aliasColors":{},"bars":false,"dashLength":10,"dashes":false,"datasource":"Prometheus","fill":1,"gridPos":{"h":9,"w":8,"x":16,"y":9},"id":10,"legend":{"avg":false,"current":false,"max":false,"min":false,"show":true,"total":false,"values":false},"lines":true,"linewidth":1,"links":[],"nullPointMode":"null","percentage":false,"pointradius":5,"points":false,"renderer":"flot","seriesOverrides":[],"spaceLength":10,"stack":false,"steppedLine":false,"targets":[{"expr":"flink_taskmanager_job_task_operator_numRecordsInPerSecond{job_id=\"$JOB_ID\"}","format":"time_series","intervalFactor":1,"legendFormat":"{{operator_name}}","refId":"A"}],"thresholds":[],"timeFrom":null,"timeShift":null,"title":"Records In per Second","tooltip":{"shared":true,"sort":0,"value_type":"individual"},"type":"graph","xaxis":{"buckets":null,"mode":"time","name":null,"show":true,"values":[]},"yaxes":[{"format":"short","label":null,"logBase":1,"max":null,"min":null,"show":true},{"format":"short","label":null,"logBase":1,"max":null,"min":null,"show":true}],"yaxis":{"align":false,"alignLevel":null}},{"aliasColors":{},"bars":false,"dashLength":10,"dashes":false,"datasource":"Prometheus","fill":1,"gridPos":{"h":9,"w":8,"x":0,"y":18},"id":19,"legend":{"alignAsTable":true,"avg":false,"current":false,"max":false,"min":false,"show":true,"total":false,"values":false},"lines":true,"linewidth":1,"links":[],"nullPointMode":"null","percentage":false,"pointradius":5,"points":false,"renderer":"flot","seriesOverrides":[],"spaceLength":10,"stack":false,"steppedLine":false,"targets":[{"expr":"flink_taskmanager_Status_JVM_Memory_Heap_Committed","format":"time_series","intervalFactor":1,"legendFormat":"Heap Comitted ({{host}})","refId":"A"},{"expr":"flink_taskmanager_Status_JVM_Memory_Heap_Max","format":"time_series","intervalFactor":1,"legendFormat":"Heap Max ({{host}})","refId":"B"},{"expr":"flink_taskmanager_Status_JVM_Memory_Heap_Used","format":"time_series","intervalFactor":1,"legendFormat":"Heap Used ({{host}})","refId":"C"}],"thresholds":[],"timeFrom":null,"timeShift":null,"title":"Memory Taskmanager","tooltip":{"shared":true,"sort":0,"value_type":"individual"},"type":"graph","xaxis":{"buckets":null,"mode":"time","name":null,"show":true,"values":[]},"yaxes":[{"format":"decbytes","label":null,"logBase":1,"max":null,"min":null,"show":true},{"format":"short","label":null,"logBase":1,"max":null,"min":null,"show":true}],"yaxis":{"align":false,"alignLevel":null}},{"cacheTimeout":null,"colorBackground":false,"colorValue":false,"colors":["#299c46","rgba(237, 129, 40, 0.89)","#d44a3a"],"datasource":"Prometheus","format":"none","gauge":{"maxValue":100,"minValue":0,"show":false,"thresholdLabels":false,"thresholdMarkers":true},"gridPos":{"h":4,"w":2,"x":8,"y":18},"id":4,"interval":null,"links":[],"mappingType":1,"mappingTypes":[{"name":"value to text","value":1},{"name":"range to text","value":2}],"maxDataPoints":100,"nullPointMode":"connected","nullText":null,"postfix":"","postfixFontSize":"50%","prefix":"","prefixFontSize":"50%","rangeMaps":[{"from":"null","text":"N/A","to":"null"}],"sparkline":{"fillColor":"rgba(31, 118, 189, 0.18)","full":false,"lineColor":"rgb(31, 120, 193)","show":false},"tableColumn":"","targets":[{"expr":"flink_jobmanager_job_totalNumberOfCheckpoints{job_id=\"$JOB_ID\"}","format":"time_series","hide":false,"instant":false,"intervalFactor":1,"refId":"A"},{"expr":"","format":"time_series","intervalFactor":1,"refId":"B"}],"thresholds":"","title":"Total checkpoints","type":"singlestat","valueFontSize":"80%","valueMaps":[{"op":"=","text":"N/A","value":"null"}],"valueName":"current"},{"cacheTimeout":null,"colorBackground":false,"colorValue":false,"colors":["#299c46","rgba(237, 129, 40, 0.89)","#d44a3a"],"datasource":"Prometheus","format":"none","gauge":{"maxValue":100,"minValue":0,"show":false,"thresholdLabels":false,"thresholdMarkers":true},"gridPos":{"h":4,"w":2,"x":10,"y":18},"id":6,"interval":null,"links":[],"mappingType":1,"mappingTypes":[{"name":"value to text","value":1},{"name":"range to text","value":2}],"maxDataPoints":100,"nullPointMode":"connected","nullText":null,"postfix":"","postfixFontSize":"100%","prefix":"","prefixFontSize":"50%","rangeMaps":[{"from":"null","text":"N/A","to":"null"}],"sparkline":{"fillColor":"rgba(31, 118, 189, 0.18)","full":false,"lineColor":"rgb(31, 120, 193)","show":false},"tableColumn":"","targets":[{"expr":"flink_jobmanager_job_numberOfCompletedCheckpoints{job_id=\"$JOB_ID\"}","format":"time_series","instant":false,"intervalFactor":1,"refId":"A"}],"thresholds":"","title":"Completed checkpoints","type":"singlestat","valueFontSize":"80%","valueMaps":[{"op":"=","text":"N/A","value":"null"}],"valueName":"current"},{"cacheTimeout":null,"colorBackground":false,"colorValue":false,"colors":["#299c46","rgba(237, 129, 40, 0.89)","#d44a3a"],"datasource":"Prometheus","format":"none","gauge":{"maxValue":100,"minValue":0,"show":false,"thresholdLabels":false,"thresholdMarkers":true},"gridPos":{"h":4,"w":2,"x":12,"y":18},"id":8,"interval":null,"links":[],"mappingType":1,"mappingTypes":[{"name":"value to text","value":1},{"name":"range to text","value":2}],"maxDataPoints":100,"nullPointMode":"connected","nullText":null,"postfix":"","postfixFontSize":"50%","prefix":"","prefixFontSize":"50%","rangeMaps":[{"from":"null","text":"N/A","to":"null"}],"sparkline":{"fillColor":"rgba(31, 118, 189, 0.18)","full":false,"lineColor":"rgb(31, 120, 193)","show":false},"tableColumn":"","targets":[{"expr":"flink_jobmanager_job_numberOfFailedCheckpoints{job_id=\"$JOB_ID\"}","format":"time_series","intervalFactor":1,"refId":"A"}],"thresholds":"","title":"Failed checkpoints","type":"singlestat","valueFontSize":"80%","valueMaps":[{"op":"=","text":"N/A","value":"null"}],"valueName":"current"},{"aliasColors":{},"bars":false,"dashLength":10,"dashes":false,"datasource":"Prometheus","fill":1,"gridPos":{"h":9,"w":8,"x":16,"y":18},"id":17,"legend":{"avg":false,"current":false,"max":false,"min":false,"show":true,"total":false,"values":false},"lines":true,"linewidth":1,"links":[],"nullPointMode":"null","percentage":false,"pointradius":5,"points":false,"renderer":"flot","seriesOverrides":[],"spaceLength":10,"stack":false,"steppedLine":false,"targets":[{"expr":"flink_taskmanager_Status_JVM_CPU_Load","format":"time_series","intervalFactor":1,"legendFormat":"{{instance}}","refId":"A"}],"thresholds":[],"timeFrom":null,"timeShift":null,"title":"CPU Load Taskmanager","tooltip":{"shared":true,"sort":0,"value_type":"individual"},"type":"graph","xaxis":{"buckets":null,"mode":"time","name":null,"show":true,"values":[]},"yaxes":[{"format":"percentunit","label":null,"logBase":1,"max":null,"min":null,"show":true},{"format":"short","label":null,"logBase":1,"max":null,"min":null,"show":true}],"yaxis":{"align":false,"alignLevel":null}},{"aliasColors":{},"bars":true,"dashLength":10,"dashes":false,"datasource":"Prometheus","fill":1,"gridPos":{"h":9,"w":8,"x":0,"y":27},"id":15,"legend":{"avg":false,"current":false,"max":false,"min":false,"show":true,"total":false,"values":false},"lines":false,"linewidth":1,"links":[],"nullPointMode":"null","percentage":false,"pointradius":5,"points":false,"renderer":"flot","seriesOverrides":[],"spaceLength":10,"stack":false,"steppedLine":false,"targets":[{"expr":"flink_jobmanager_job_lastCheckpointDuration{job_id=\"$JOB_ID\"}","format":"time_series","interval":"","intervalFactor":1,"refId":"A"}],"thresholds":[],"timeFrom":null,"timeShift":null,"title":"Checkpoint Duration","tooltip":{"shared":true,"sort":0,"value_type":"individual"},"type":"graph","xaxis":{"buckets":null,"mode":"time","name":null,"show":true,"values":[]},"yaxes":[{"format":"ms","label":null,"logBase":1,"max":null,"min":null,"show":true},{"format":"short","label":null,"logBase":1,"max":null,"min":null,"show":true}],"yaxis":{"align":false,"alignLevel":null}}],"refresh":"5s","schemaVersion":16,"style":"dark","tags":[],"templating":{"list":[{"allValue":null,"current":{},"datasource":"Prometheus","hide":0,"includeAll":false,"label":"Job ID","multi":false,"name":"JOB_ID","options":[],"query":"flink_jobmanager_job_uptime","refresh":2,"regex":"/job_id=\"(.*)\",job_name/","skipUrlSync":false,"sort":1,"tagValuesQuery":"","tags":[],"tagsQuery":"","type":"query","useTags":false}]},"time":{"from":"now-5m","to":"now"},"timepicker":{"refresh_intervals":["5s","10s","30s","1m","5m","15m","30m","1h","2h","1d"],"time_options":["5m","15m","1h","6h","12h","24h","2d","7d","30d"]},"timezone":"","title":"Flink","uid":"zduknc1mk","version":1}
+  prometheusOperator:
+    admissionWebhooks:
+      patch:
+        nodeSelector:
+          tier: prometheus
+    nodeSelector:
+      tier: prometheus
+  alertmanager:
+    alertmanagerSpec:
+      nodeSelector: 
+        tier: prometheus
+  prometheus:
+    prometheusSpec:
+      nodeSelector:
+        tier: prometheus     
+      storageSpec:
+        volumeClaimTemplate:
+            spec:
+              storageClassName: local-path
+              resources:
+                requests:
+                  storage: 8Gi              
+      scrapeInterval: 5s
+      scrapeTimeout: 5s    
+      evaluationInterval: 5s
+      #additionalScrapeConfigs: 
+      #- job_name: 'kubernetes-pods'
+#
+      #  kubernetes_sd_configs:
+      #    - role: pod
+#
+      #  relabel_configs:
+      #    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+      #      action: keep
+      #      regex: true
+      #    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+      #      action: replace
+      #      target_label: __metrics_path__
+      #      regex: (.+)
+      #    - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+      #      action: replace
+      #      regex: ([^:]+)(?::\d+)?;(\d+)
+      #      replacement: $1:$2
+      #      target_label: __address__
+      #    - source_labels: [__meta_kubernetes_namespace]
+      #      action: replace
+      #      target_label: kubernetes_namespace
+      #    - source_labels: [__meta_kubernetes_pod_name]
+      #      action: replace
+      #      target_label: kubernetes_pod_name      
+      #    - source_labels: [__meta_kubernetes_pod_label_app]
+      #      regex: (flink|generator|cadvisor)
+      #      action: keep
+      #    #- source_labels: [__meta_kubernetes_pod_container_port_name]
+      #    #  regex: metrics
+      #    #  action: keep
+      #    - action: labelmap
+      #      regex: __meta_kubernetes_pod_label_(.+)          
+      #    - action: labelmap 
+      #      regex: __meta_kubernetes_pod_(.+)     
+
+hostAddress: 141-76-50-41.nip.io 

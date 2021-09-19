@@ -1,0 +1,41 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: fluent-conf
+data:
+  fluent.conf: |-
+    <source>
+      @type forward
+      port 24224
+    </source>
+    <match private-recsys.**>
+      @type copy
+      <store>
+        # plugin type
+        @type mongo
+        @log_level debug
+
+        type_name fluentd
+
+        # mongodb host + port
+        connection_string mongodb://{{ .Values.mongoHost }}:27017/{{ .Values.database }}
+
+        # mongodb db + collection
+        tag_mapped
+        collection unknown
+
+        time_key time
+
+        # interval
+        <buffer>
+          flush_interval 1s
+        </buffer>
+
+      </store>
+    </match>
+    <label @ERROR>
+      <match **>
+        @type stdout
+      </match>
+    </label>

@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flink-taskmanager
+spec:
+  replicas: {{ .Values.taskmanager.replicaCount }}
+  selector:
+    matchLabels:
+      app: flink
+      component: taskmanager
+  template:
+    metadata:
+      labels:
+        app: flink
+        component: taskmanager
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /
+        prometheus.io/port: "9249"        
+    spec:
+      containers:
+      - name: taskmanager
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: Always
+        workingDir: /opt/flink
+
+        command: ["/bin/bash", "-c", "$FLINK_HOME/bin/taskmanager.sh start -Dtaskmanager.host=$(K8S_POD_IP); \
+          while :;
+          do
+            if [[ -f $(find $FLINK_HOME/log -name '*taskmanager*.log' -print -quit) ]];
+              then tail -f -n +1 $FLINK_HOME/log/*taskmanager*.log;
+            fi;
+          done"]
+        env:
+          - name: K8S_POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP          
+        ports:
+        - containerPort: 6122
+          name: rpc
+        - containerPort: 5005
+          name: debug
+        livenessProbe:
+          tcpSocket:
+            port: 6122
+          initialDelaySeconds: 30
+          periodSeconds: 60
+        volumeMounts:
+        - name: flink-config-volume
+          mountPath: /opt/flink/conf/
+        - name: flink-hdfs-volume
+          mountPath: /opt/flink/etc-hadoop/core-site.xml
+          subPath: core-site.xml
+        - name: flink-hdfs-volume
+          mountPath: /opt/flink/etc-hadoop/hdfs-site.xml
+          subPath: hdfs-site.xml          
+        securityContext:
+          runAsUser: 9999  # refers to user _flink_ from official flink image, change if necessary
+      volumes:
+      - name: flink-config-volume
+        configMap:
+          name: flink-config
+          items:
+          - key: flink-conf.yaml
+            path: flink-conf.yaml
+          - key: log4j.properties
+            path: log4j.properties
+      - name: flink-hdfs-volume
+        configMap:
+          name: flink-config
+          items:
+          - key: core-site.xml
+            path: core-site.xml
+          - key: hdfs-site.xml
+            path: hdfs-site.xml            
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values: ["flink"]
+              topologyKey: kubernetes.io/hostname
+      {{- with .Values.taskmanager.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}                    

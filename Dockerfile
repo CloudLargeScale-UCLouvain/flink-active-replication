@@ -1,0 +1,17 @@
+FROM flink:1.7-hadoop28
+# add my own flink build
+ADD docker/docker-entrypoint.sh /
+COPY --chown=flink:flink flink-ar/flink-dist/target/flink-1.7-AR-SNAPSHOT-bin/flink-1.7-AR-SNAPSHOT/ /opt/flink
+# Copy it as there are huge DNS issues here.
+COPY docker/gcs-connector-latest-hadoop2.jar /opt/flink/lib
+RUN mkdir /opt/flink/etc-hadoop
+# Copy logging and config files
+COPY docker/flink-conf.yaml /opt/flink/conf/flink-conf.yaml
+COPY docker/log4j.properties /opt/flink/conf/log4j-console.properties
+# Link prometheus metrics reporter to flink lib
+RUN  cp /opt/flink/opt/flink-metrics-prometheus* /opt/flink/lib/
+ENV HADOOP_CONF_DIR=/opt/flink/etc-hadoop
+ENV TASK_MANAGER_NUMBER_OF_TASK_SLOTS=1
+ENV FLINK_HOME=/opt/flink
+
+COPY --chown=flink:flink betterCloudExample ./bettercloud

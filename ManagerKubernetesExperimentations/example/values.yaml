@@ -1,0 +1,3 @@
+argo:
+    install: false
+hostAddress: 10-0-0-33.nip.io    

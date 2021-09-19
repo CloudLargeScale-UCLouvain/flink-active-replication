@@ -1,0 +1,192 @@
+# Default values for flink-job.
+# This is a YAML-formatted file.
+
+# name of the job manager and its port
+flinkApiHost: flink-jobmanager
+flinkApiPort: 8081
+
+# used bucket in minio for results
+bucket: results
+
+testName: test
+
+# additional parameters, if needed
+extraOpts: 
+
+retrieveScript:
+  getAllSinks: false
+
+killTaskManager:
+  enabled: false
+  taskName: "map-at-level-0"
+  killDelay: 150
+  replicaIndex: 0
+  operatorIndex: 0
+  gracePeriod: 30
+  kazooTarget: ""
+# injector used for the bettercloud workload
+injector:
+  enabled: false
+  # jar path
+  jarFile: /opt/flink/bettercloud/target/flink-fault-tolerance-baseline-1.0-SNAPSHOT.jar
+  jobClass: me.florianschmidt.examples.bettercloud.DataGeneratorJob
+
+  pattern1: ""
+  pattern2: ""
+
+  zkServers: injector-zookeeper:2181
+  kafkaServers: injector-kafka:9092
+  seed: 0
+  # not yet implemented (1 used)
+  mapParallelism: 1
+  # rate of consumer events sent by injector (BetterCloud)
+  consumerRate: 5_000
+  # rate of control events sent by injector (BetterCloud)
+  controlRate: 5
+  # algorithm
+  algorithm: VANILLA
+  # additional parameters, if needed
+  extraOpts: 
+
+job:
+  # jar path
+  jarFile: /opt/flink/bettercloud/target/flink-fault-tolerance-baseline-1.0-SNAPSHOT.jar
+  # class name, set to the name of the used class (default: microbenchmark increasinglengthjob)
+  jobClass: me.florianschmidt.replication.baseline.jobs.IncreasingLengthJob
+  # sharing group of the tasks - true: distributed as in the class, false: set to same sharing group (all tasks colocated) for debug
+  sharingGroup: true
+  # duration of injection
+  duration: 60
+
+  # --- microbenchmark specific parameters ---
+  # length
+  length: 1
+  # parallelism set for tasks
+  mapParallelism: 2 
+  # rate of injection for microbenchmarks
+  rate: 5_000
+  rate2: 100
+  pattern1: ""
+  pattern2: ""
+
+  bufferTimeout: -2
+  latencyTrackingInterval: -1
+
+
+# Algorithm parameters
+algorithm:
+  # --- global Parameters ---
+  # used algorithm - can be VANILLA* (regular flink installation) NO_ORDERING*, BETTER_BIAS*, LEADER_KAFKA* (active replication branch)
+  type: BETTER_BIAS 
+  
+  # replication Factor (NO_ORDERING, BETTER_BIAS, LEADER_KAFKA)
+  replicationFactor: 2
+
+  # --- BETTER_BIAS parameters ---
+  # idle marks used by BETTER_BIAS algorithm, true is activated
+  idleMarks: "false"
+  # idle marks interval
+  idleMarksInterval: 200
+
+  # --- LIVE_ROBIN
+  liveRobinMarks: "false"
+  liveRobinMarksInterval: 10
+  heartbeatEmitter:
+    enabled: false
+    duration: 300
+
+  # --- LEADER_KAFKA parameters ---
+  # kafka and zookeeper used for LEADER_KAFKA algorithm
+  zkServers: flink-zookeeper:2181
+  kafkaServers: flink-kafka:9092
+
+  # --- VANILLA parameters ---
+  # activation of checkpointing
+  checkpointing: "true"
+  # memory or rocksdb (needed if checkpointing activated)
+  stateBackend: "memory"
+  checkpointFrequency: 30
+  # incremental checkpointing
+  incrementalCheckpointing: "false"
+  # address of hdfs for checkpointing
+  stateBackendAddress: "hdfs://flink-hdfs:8020/flink-checkpoints"
+
+
+
+
+
+# zookeeper:
+#   enabled: true
+#   image:
+#     tag: 3.6.0-debian-10-r12  
+#   replicaCount: 3
+#   auth:
+#     enabled: false
+#   allowAnonymousLogin: true
+#   fourlwCommandsWhitelist: "*"
+#   zookeeper:
+#     volumePermissions:
+#       enabled: false
+#   persistence:
+#     enabled: false
+#     storageClass: local-path
+#   nodeSelector:
+#     tier: injector
+
+prometheus:
+  host: manager-prometheus-prometheus.manager
+  port: 9090
+
+image:
+  repository: grosinosky/flink
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: 1.7.2-ar
+
+replicaCount: 1
+
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

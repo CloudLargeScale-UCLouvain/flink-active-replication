@@ -1,0 +1,148 @@
+# Default values for flink.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+jobmanager:
+  replicaCount: 1
+  nodeSelector: 
+    tier: jobmanager
+taskmanager:
+  replicaCount: 30
+  nodeSelector: 
+    tier: taskmanager
+
+minio:
+  image:
+    debug: true
+  accessKey:
+    password: AKIAIOSFODNN7EXAMPLE
+  secretKey:
+    password: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+  persistence:
+    existingClaim: pvc-manager-minio
+hdfs:
+  enabled: true
+  conf:
+    coreSite:
+      hadoop.security.authorization: false
+  persistence:
+    nameNode:
+      enabled: true
+      storageClass: hdfs-name  
+    dataNode:
+      enabled: true
+      storageClass: hdfs  
+
+zookeeper:
+  enabled: true
+  image:
+    tag: 3.6.0-debian-10-r12
+  replicaCount: 3
+  auth:
+    enabled: false
+  allowAnonymousLogin: true
+  fourlwCommandsWhitelist: "*"
+  tickTime: 250
+  zookeeper:
+    volumePermissions:
+      enabled: false
+  persistence:
+    enabled: false
+    storageClass: local-path
+  nodeSelector:
+    tier: zkh
+
+kafka:
+  enabled: true
+  image:
+    tag: 2.4.1-debian-10-r8
+  zookeeper:
+    enabled: false
+  zookeeperConnectionTimeoutMs: 30000
+  replicaCount: 3
+  deleteTopicEnable: true
+  externalZookeeper:
+    servers: flink-zookeeper
+  persistence:
+    enabled: false
+    storageClass: local-path
+  nodeSelector:
+    tier: zkh
+
+
+replicaCount: 1
+
+image:
+  repository: grosinosky/flink
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: 1.7.2-ar
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths: []
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

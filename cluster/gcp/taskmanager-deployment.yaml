@@ -1,0 +1,52 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: flink-taskmanager
+spec:
+  replicas: 7
+  template:
+    metadata:
+      labels:
+        app: flink
+        component: taskmanager
+    spec:
+      containers:
+      - name: taskmanager
+        image: DOCKER_IMAGE_NAME
+        imagePullPolicy: Always
+        args:
+          - taskmanager
+        ports:
+          - containerPort: 6121
+            name: data
+          - containerPort: 6122
+            name: rpc
+          - containerPort: 6125
+            name: query
+          - containerPort: 9249
+            name: metrics
+        env:
+          - name: JOB_MANAGER_RPC_ADDRESS
+            value: flink-jobmanager
+          - name: HADOOP_CONF_DIR
+            value: /opt/flink/etc-hadoop
+        volumeMounts:
+          - mountPath: '/opt/flink/conf/flink-conf-readonly.yaml'   # path to mount it in container
+            name: config-volume                                     # name of the k8s config file
+            subPath: 'flink-conf.yaml'                              # what it's named in the k8s config file
+          - mountPath: '/opt/flink/conf/log4j.properties'
+            name: config-volume
+            subPath: 'log4j.properties'
+      volumes:
+        - configMap:
+            name: flink-config
+          name: config-volume
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values: ["flink"]
+              topologyKey: kubernetes.io/hostname

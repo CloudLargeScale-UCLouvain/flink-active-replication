@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "flink.fullname" . | indent 4 }}-create-hdfs
+  labels:
+{{ include "flink.labels" . | indent 4 }}  
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "flink.name" . }}-create-hdfs
+        app.kubernetes.io/instance: {{ .Release.Name }}  
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}        
+      restartPolicy: Never
+      containers:
+      - name:  create-hdfs
+        image:  "bitnami/kubectl:1.17.4"
+        imagePullPolicy: IfNotPresent
+        command: 
+        - "/bin/sh"
+        - "-c"
+        - " kubectl exec deployment/flink-hdfs-httpfs -- bash -c 'hdfs dfs -mkdir -p /flink-checkpoints ; hdfs dfs -chown flink:flink /flink-checkpoints'"
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}      
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

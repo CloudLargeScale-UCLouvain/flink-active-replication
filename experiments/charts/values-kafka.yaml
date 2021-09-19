@@ -1,0 +1,17 @@
+image:
+  tag: 2.4.1-debian-10-r8
+zookeeper:
+  enabled: true
+  persistence:
+    enabled: false
+  nodeSelector:
+    tier: injector
+zookeeperConnectionTimeoutMs: 30000
+replicaCount: 1
+externalZookeeper:
+  servers: flink-injector-zookeeper  
+persistence:
+  enabled: false
+  storageClass: local-path
+nodeSelector:
+  tier: injector

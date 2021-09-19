@@ -1,0 +1,17 @@
+
+# Just one more PV
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pushgateway-pv
+  labels:
+    app: prometheus
+    component: pushgateway
+    release: my-prometheus
+spec:
+  capacity:
+    storage: 4Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/home/ubuntu/volume/data/prometheus"

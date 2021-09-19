@@ -1,0 +1,84 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "flink-job.fullname" . | indent 4 }}-retrieve
+  labels:
+{{ include "flink-job.labels" . | indent 4 }}  
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "flink-job.name" . }}-retrieve
+        app.kubernetes.io/instance: {{ .Release.Name }}  
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}        
+      volumes:
+        - name: {{ include "flink-job.fullname" . | indent 4 }}
+          configMap:
+            name: {{ include "flink-job.fullname" . | indent 4 }}  
+            defaultMode: 0744            
+      restartPolicy: Never
+      initContainers:
+      - name: wait-for-launch-job
+        image: groundnuty/k8s-wait-for:0.1
+        args: [ "job", "-lapp.kubernetes.io/name={{ include "flink-job.name" . }}-launch" ]      
+      containers:
+      - name:  retrieve
+        image:  grosinosky/python-mc:0.0.3
+        imagePullPolicy: IfNotPresent
+        command: 
+        - "/bin/sh"
+        - "-c"
+        - "/launch.sh"
+        env:
+          - name: XP_NAME
+            value: "{{ .Values.experimentationName }}"
+          - name: GET_ALL_SINKS
+            value: "{{ .Values.retrieveScript.getAllSinks }}"
+          - name: DURATION
+            value: "{{ .Values.job.duration }}"
+          - name: FLINK_IMAGE
+            value: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          - name: FLINK_API_HOST
+            value: "{{ .Values.flinkApiHost }}"
+          - name: JOBMANAGER_PORT
+            value: "{{ .Values.flinkApiPort }}"
+          - name: JAR_FILE
+            value: "{{ .Values.jarFile }}"
+          - name: JOB_NAME
+            value: "{{ include "flink-job.fullname" . }}"
+          - name: TEST_NAME
+            value: "{{ .Values.testName }}"
+          - name: PROMETHEUS_HOST
+            value: "{{ .Values.prometheus.host }}"
+          - name: PROMETHEUS_PORT
+            value: "{{ .Values.prometheus.port }}"
+          - name: EXTRA_OPTS
+            value: "--pattern1 {{ .Values.job.pattern1 }} --pattern2 {{ .Values.job.pattern2 }} --rate2 {{ .Values.job.rate2 }} --fsStateBackend {{ .Values.algorithm.stateBackendAddress }} --sharing-group {{ .Values.job.sharingGroup }} --liverobin-marks {{ .Values.algorithm.liveRobinMarks }} --idle-marks.interval {{ .Values.algorithm.liveRobinMarksInterval }} --replicationFactor {{ .Values.algorithm.replicationFactor }} --checkpointing {{ .Values.algorithm.checkpointing }} --state-backend {{ .Values.algorithm.stateBackend }} --checkpoint-frequency {{ .Values.algorithm.checkpointFrequency }} --incremental-checkpointing {{ .Values.algorithm.incrementalCheckpointing }} --buffer-timeout {{ .Values.job.bufferTimeout }} --latency-tracking-interval {{ .Values.job.latencyTrackingInterval }} --idle-marks {{ .Values.algorithm.idleMarks }} --rate {{ .Values.job.rate }} --map-parallelism {{ .Values.job.mapParallelism }} --length {{ .Values.job.length }} --algorithm {{ .Values.algorithm.type }} --kafka.servers {{ .Values.algorithm.kafkaServers }} --zk.servers {{ .Values.algorithm.zkServers}} --injector.kafka.servers {{ .Values.injector.kafkaServers }} --injector.zk.servers {{ .Values.injector.zkServers}} --consumer-event-rate {{ .Values.injector.consumerRate }} --control-event-rate {{ .Values.injector.controlRate }} {{ .Values.extraOpts }}"
+          - name: PYTHONUNBUFFERED
+            value: "1"
+        volumeMounts:
+        - name: {{ include "flink-job.fullname" . | indent 4 }}
+          mountPath: /launch.sh
+          subPath: launch.sh
+        - name: {{ include "flink-job.fullname" . | indent 4 }}
+          mountPath: /retrieve-results.py
+          subPath: retrieve-results.py
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}      
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

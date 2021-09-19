@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "flink-job.fullname" . | indent 4 }}
+data:
+  launch.sh : |-
+    export TIMESTAMP=$(date +%s)
+    # installed in Docker image grosinosky/python-mc:0.0.1
+    #apk --no-cache add curl jq ca-certificates openssl
+    #curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.18.0/bin/linux/amd64/kubectl
+    #chmod +x ./kubectl
+    #mv ./kubectl /usr/local/bin/kubectl
+    #kubectl version --client
+    #wget https://dl.min.io/client/mc/release/linux-amd64/mc
+    #chmod +x mc
+    #mv ./mc /usr/local/bin/mc
+    #mc --help    
+    #pip install requests
+    mc alias set minio-local http://flink-minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+    echo "Creating bucket {{ .Values.bucket }}"
+    mc mb minio-local/{{ .Values.bucket }}
+    echo "Sleeping for $DURATION"
+    sleep $DURATION
+    echo "Retrieving results"
+    python /retrieve-results.py
+    echo "Copying results to {{ .Values.bucket }}"
+    mc cp -r /measurements/* minio-local/{{ .Values.bucket }}
+  retrieve-results.py: |- 
+{{ .Files.Get "retrieve.py" | indent 4}}
+
+  kill-task-manager.py: |-
+{{ .Files.Get "kill-task-manager.py" | indent 4}}
+
+  heartbeat-emitter.py: |-
+{{ .Files.Get "heartbeat-emitter.py" | indent 4}}

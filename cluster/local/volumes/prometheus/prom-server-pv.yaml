@@ -1,0 +1,28 @@
+
+# Just one more PV
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: prometheus-server-pv
+  labels:
+    app: prometheus
+    component: server
+    release: my-prometheus
+#    chart: prometheus-11.1.2
+#    heritage: Helm
+spec:
+  capacity:
+    storage: 8Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/home/ubuntu/volume/data/prometheus-server"
+#  nodeAffinity:
+#    required:
+#      nodeSelectorTerms:
+#      - matchExpressions:
+#        - key: kubernetes.io/hostname
+#          operator: In
+#          values:
+#          - stream12
+

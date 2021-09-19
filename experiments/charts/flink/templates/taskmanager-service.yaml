@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: flink-taskmanager
+spec:
+  type: NodePort
+  ports:  
+  - name: debug
+    port: 5005
+    nodePort: 31005
+  selector:
+    app: flink
+    component: taskmanager

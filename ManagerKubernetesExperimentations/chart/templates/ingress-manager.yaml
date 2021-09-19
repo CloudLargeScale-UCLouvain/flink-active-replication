@@ -1,0 +1,59 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-manager
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+  - host: mongo.{{ .Values.hostAddress}}
+    http:
+      paths:
+      - path: /?(.*)
+        backend:
+          serviceName: manager-mongo-express
+          servicePort: 8081
+  - host: jupyter.{{ .Values.hostAddress}}
+    http:
+      paths:
+      - path: /?(.*)
+        backend:
+          serviceName: manager-jupyter
+          servicePort: 8888
+  - host: argo.{{ .Values.hostAddress}}
+    http:
+      paths:
+      - path: /?(.*)
+        backend:
+          serviceName: manager-server
+          servicePort: 2746
+  - host: prometheus.{{ .Values.hostAddress}}
+    http:
+      paths:
+      - path: /?(.*)
+        backend:
+          serviceName: manager-prometheus-prometheus
+          servicePort: 9090
+  - host: grafana.{{ .Values.hostAddress}}
+    http:
+      paths:
+      - path: /?(.*)
+        backend:
+          serviceName: manager-grafana
+          servicePort: 80          
+  - host: minio.{{ .Values.hostAddress}}
+    http:
+      paths:
+      - path: /?(.*)
+        backend:
+          serviceName: manager-minio
+          servicePort: 9000                    
+  - host: fluentd.{{ .Values.hostAddress}}
+    http:
+      paths:
+      - path: /?(.*)
+        backend:
+          serviceName: manager-fluentd
+          servicePort: 24224

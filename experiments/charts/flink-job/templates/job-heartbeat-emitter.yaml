@@ -1,0 +1,62 @@
+{{ if .Values.algorithm.heartbeatEmitter.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "flink-job.fullname" . | indent 4 }}-heartbeart-emitter
+  labels:
+{{ include "flink-job.labels" . | indent 4 }}  
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "flink-job.name" . }}-heartbeart-emitter
+        app.kubernetes.io/instance: {{ .Release.Name }}  
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}        
+      volumes:
+        - name: {{ include "flink-job.fullname" . | indent 4 }}
+          configMap:
+            name: {{ include "flink-job.fullname" . | indent 4 }}  
+            defaultMode: 0744            
+      restartPolicy: Never
+      #initContainers:
+      #- name: wait-for-launch-job
+      #  image: groundnuty/k8s-wait-for:0.1
+      #  args: [ "job", "-lapp.kubernetes.io/name={{ include "flink-job.name" . }}-launch" ]      
+      containers:
+      - name:  heartbeat-emitter
+        image:  grosinosky/python-mc:0.0.3
+        imagePullPolicy: IfNotPresent
+        command: 
+        - "python"
+        - "/heartbeat-emitter.py"
+        env:
+          - name: KAFKA_SERVER
+            value: "{{ .Values.algorithm.kafkaServers }}"
+          - name: PERIOD
+            value: "{{ .Values.algorithm.liveRobinMarksInterval }}"
+          - name: DURATION
+            value: "{{ .Values.algorithm.heartbeatEmitter.duration }}"
+        volumeMounts:
+        - name: {{ include "flink-job.fullname" . | indent 4 }}
+          mountPath: /heartbeat-emitter.py
+          subPath: heartbeat-emitter.py
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}      
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+{{ end }}      

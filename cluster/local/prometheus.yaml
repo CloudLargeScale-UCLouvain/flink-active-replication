@@ -1,0 +1,58 @@
+server:
+  global:
+    scrape_interval: 5s
+    scrape_timeout: 5s
+  nodeSelector:
+    tier: prometheus
+alertmanager:
+  nodeSelector:
+    tier: prometheus
+pushgateway:
+  nodeSelector:
+    tier: prometheus    
+serverFiles:
+  prometheus.yml:
+    scrape_configs:
+      # Example scrape config for pods
+      #
+      # The relabeling allows the actual pod scrape endpoint to be configured via the
+      # following annotations:
+      #
+      # * `prometheus.io/scrape`: Only scrape pods that have a value of `true`
+      # * `prometheus.io/path`: If the metrics path is not `/metrics` override this.
+      # * `prometheus.io/port`: Scrape the pod on the indicated port instead of the default of `9102`.
+      - job_name: 'kubernetes-pods'
+
+        kubernetes_sd_configs:
+          - role: pod
+
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+          - source_labels: [__meta_kubernetes_namespace]
+            action: replace
+            target_label: kubernetes_namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            action: replace
+            target_label: kubernetes_pod_name      
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            regex: (flink|generator|cadvisor)
+            action: keep
+          #- source_labels: [__meta_kubernetes_pod_container_port_name]
+          #  regex: metrics
+          #  action: keep
+          - action: labelmap
+            regex: __meta_kubernetes_pod_label_(.+)          
+          - action: labelmap 
+            regex: __meta_kubernetes_pod_(.+)
+

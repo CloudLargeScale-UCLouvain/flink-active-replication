@@ -1,0 +1,172 @@
+# Default values for manager.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+hostAddress: 192-168-0-2.nip.io
+minio:
+  persistence:
+    existingClaim: argo-minio
+argo:
+  install: true
+  useDefaultArtifactRepo: false
+  artifactRepository:
+    archiveLogs: true
+    s3:
+      accessKeySecret:
+        key: accesskey
+        name: manager-minio
+      secretKeySecret:
+        key: secretkey
+        name: manager-minio
+      bucket: argo-artifacts
+      endpoint: manager-minio.manager:9000
+      insecure: true    
+  minio:
+    install: false # broken the 21/01 (see https://github.com/argoproj/argo-helm/pull/495)
+    persistence:
+      existingClaim: argo-minio
+#    ingress:
+#      enabled: true
+#      annotations:
+#        kubernetes.io/ingress.class: nginx
+#        nginx.ingress.kubernetes.io/rewrite-target: /$1
+#        nginx.ingress.kubernetes.io/ssl-redirect: "false"    
+#      hosts:
+#      - minio.192-168-0-2.nip.io
+#      path: /?(.*)
+  server:
+    ## Ingress path redirection not implemented in Argo chart : see global Ingress
+    #ingress:
+    #  enabled: true
+    #  annotations:
+    #    kubernetes.io/ingress.class: nginx
+    #    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    #    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    #  hosts:
+    #  - argo.192-168-0-2.nip.io
+    #  path: /?(.*)
+loki:
+  install: false
+  loki:
+  nodeSelector: 
+    tier: prometheus
+  config:
+    limits_config:
+      ingestion_rate_mb: 16
+      ingestion_burst_size_mb: 32
+prometheus:
+  install: true
+  grafana:
+    nodeSelector:
+      tier: manager
+    ## uncomment if Loki is added
+    #additionalDataSources:
+    #- name: Loki
+    #  type: loki
+    #  orgId: 1
+    #  url: http://manager-loki.manager:3100/
+    #  access: proxy
+    #  isDefault: false    
+    #  editable: false    
+    #  version: 1      
+  prometheus:
+#    ingress:
+#      enabled: true
+#      annotations:
+#        kubernetes.io/ingress.class: nginx
+#        nginx.ingress.kubernetes.io/rewrite-target: /$1
+#        nginx.ingress.kubernetes.io/ssl-redirect: "false"
+#      hosts:
+#        - prometheus.192-168-0-2.nip.io
+#      paths:
+#        - /?(.*)
+    prometheusSpec:
+      scrape_interval: 15s
+      ## How long until a scrape request times out
+      ##
+      scrape_timeout: 30s
+      ## How frequently to evaluate rules
+      ##
+      evaluation_interval: 15s
+      nodeSelector:
+        tier: manager
+    prometheusOperator:
+      nodeSelector:
+        tier: manager
+fluentd:
+#  ingress:
+#    enabled: true
+#    annotations:
+#      kubernetes.io/ingress.class: nginx
+#      nginx.ingress.kubernetes.io/rewrite-target: /$1
+#      nginx.ingress.kubernetes.io/ssl-redirect: "false"    
+#    hosts:
+#    - host: fluentd.192-168-0-2.nip.io
+#      paths:
+#      - /?(.*)
+  nodeSelector:
+    tier: manager
+jupyter:
+  nodeSelector:
+    tier: manager
+mongo-express:
+  nodeSelector:
+    tier: manager
+mongo-manager:
+  usePassword: false
+  persistence:
+    enabled: true
+    existingClaim: pvc-manager-mongoxp
+  auth:
+    enabled: false
+  nodeSelector:
+    tier: manager
+
+image:
+  repository: nginx
+  tag: stable
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths: []
+
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+
+nodeSelector:
+  tier: manager
+
+tolerations: []
+
+affinity: {}

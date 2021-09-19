@@ -1,0 +1,9 @@
+python-dateutil
+pymongo
+numpy
+pandas
+minio
+psycopg2-binary
+pyyaml
+requests
+kafka-python

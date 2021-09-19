@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: generator
+spec: 
+  replicas: 1
+  selector:
+    matchLabels:
+      app: generator
+  template:
+    metadata:
+      labels:
+        app: generator
+    spec:
+      containers:
+      - name: generator
+        image: gcr.io/flink-master-thesis/generator
+        imagePullPolicy: Always
+        command: ["/app/main"]
+        args: ["--rate", "25000", "--batchsize", "100"]
+        ports:
+          - containerPort: 9999
+            name: ui
+          - containerPort: 9998
+            name: metrics
+        resources:
+          limits:
+            memory: "1Gi"
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values: ["flink"]
+              topologyKey: kubernetes.io/hostname
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: generator
+spec:
+  ports:
+    - name: socket
+      port: 9999
+    - name: metrics
+      port: 9998
+  selector:
+    app: generator

@@ -1,0 +1,20 @@
+dependencies:
+  - name: minio
+    version: 4.1.0
+    repository: https://charts.bitnami.com/bitnami 
+    alias: minio
+  - name: hdfs
+    version: 0.1.9
+    repository: https://gradiant.github.io/charts
+    alias: hdfs
+    condition: hdfs.enabled    
+  - name: zookeeper
+    version: 5.13.2
+    repository: https://charts.bitnami.com/bitnami
+    condition: zookeeper.enabled
+    alias: zookeeper
+  - name: kafka
+    version: 11.7.2
+    repository: https://charts.bitnami.com/bitnami
+    condition: kafka.enabled
+    alias: kafka
